@@ -28,4 +28,5 @@
 
 #
 
-### 3. R코드 & 결과 html : https://docsconv.malangmalang.com/hermes/resource/store/c9/9b/43c3cc24d4d3d458de5d9a2939c82da72635/hview.html
+### 3. R코드 : https://github.com/ChSSolee/002/blob/main/K-Folds%20CV%EB%A5%BC%20%ED%99%9C%EC%9A%A9%ED%95%9C%20%EC%B5%9C%EA%B3%A0%EC%84%B1%EB%8A%A5%20%EB%AA%A8%ED%98%95%20%ED%83%90%EC%83%89.Rmd
+> #### html 파일 : 

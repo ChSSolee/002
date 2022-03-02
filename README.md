@@ -18,13 +18,13 @@
 
 ### 2. 사용 프로그램 : R 4.0.0
 #### 사용 라이브러리 : 
-> library(ROCR)
-> library(MASS)
-> library(boot)
-> library(e1071)
-> library(tree)
-> library(gbm)
-> library(randomForest)
+> library(ROCR)  
+> library(MASS)  
+> library(boot)  
+> library(e1071)  
+> library(tree)  
+> library(gbm)  
+> library(randomForest)  
 
 #
 

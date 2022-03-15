@@ -77,6 +77,7 @@ library(randomForest)
 <br/>
 
 4. 변수별 상관관계 시각화
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420885-0e4cdd82-323b-44d1-9cfd-ea3e61569d3c.png">
 
 ```javascript
 heart <- read.csv("heart.csv", header = T)
@@ -91,6 +92,9 @@ plot(heart, panel = panel.smooth)
 - 분석을 위해 변수들의 형태를 수정한다.
 ```javascript
 sum(is.na(heart)) 
+```
+```
+## [1] 0
 ```
 ```javascript
 heart$Sex <- factor(heart$Sex) ; heart$ChestPainType <- factor(heart$ChestPainType)
@@ -111,6 +115,12 @@ test <- sort(setdiff(1:nrow(heart),train))
 train.d <- heart[train,] ; test.d <- heart[test,]
 dim(test.d) ; dim(train.d)
 ```
+```
+## [1] 275  12
+```
+```
+## [1] 643  12
+```
 
 <br/>
 
@@ -123,7 +133,7 @@ dim(test.d) ; dim(train.d)
 - 완전모형, 영모형 (상수항만을 설명 변수로 가지는 모형)에 각각 전진선택법과 후진제거법을 적용하여 나온 축소모형은 동일한 것으로 확인 되었으며, 아래와 같다. 
 - HeartDisease ~ Age + Sex + ChestPainType + Cholesterol + FastingBS + ExerciseAngina + Oldpeak + ST_Slope
 
-```{r```javascript
+```javascript
 Fullmod = glm(HeartDisease ~ ., data = train.d, family = binomial(link = "logit")) # 완전모형
 Nullmod = glm(HeartDisease ~ 1, data = train.d, family = binomial(link = "logit")) # 영모형
 backward <- step(Fullmod, direction = "backward")
@@ -132,17 +142,30 @@ forward <- step(Nullmod, scope = list(lower = formula(Nullmod), upper = formula(
 ```javascript
 formula(backward) ; formula(forward)
 ```
+```
+## HeartDisease ~ Age + Sex + ChestPainType + Cholesterol + FastingBS + ExerciseAngina + Oldpeak + ST_Slope
+```
+```
+## HeartDisease ~ Age + Sex + ChestPainType + Cholesterol + FastingBS + ExerciseAngina + Oldpeak + ST_Slope
+```
+
+<br/>
+
 ```javascript
 mod = glm(formula(backward), data = train.d, family = binomial(link = "logit")) # 축소모형
 formula(mod)
 ```
+```
+## HeartDisease ~ Age + Sex + ChestPainType + Cholesterol + FastingBS + ExerciseAngina + Oldpeak + ST_Slope
+```
+
 
 <br/>
 
 #### 로지스틱 회귀
 - 10-folds CV를 활용하여 로지스틱 방법의 모형별 정확도와 AUC값 계산
 
-**1. 완전모형 적합**
+#### **1. 완전모형 적합**
 **정확도**
 ```javascript
 k = 10 ; list <- 1:k
@@ -163,6 +186,9 @@ for (i in 1:k) {
 
 (LR.Full.acc <- mean(round(glm.prediction)[,1] == glm.testset[,1]))
 ```
+```
+## [1] 0.8627451
+```
 
 <br/>
 
@@ -172,10 +198,14 @@ glm.pr1 <- prediction(glm.prediction[,1], glm.testset[,1])
 glm.perf1 <- performance(glm.pr1, measure = "tpr", x.measure = "fpr")
 glm.auc1 <- performance(glm.pr1, measure = "auc") ; (LR.Full.auc <- unlist(glm.auc1@y.values))
 ```
+```
+## [1] 0.9244383
+```
+
 
 <br/>
 
-**2. 축소모형 적합**
+#### **2. 축소모형 적합**
 **정확도**
 ```javascript
 k = 10 ; list <- 1:k
@@ -196,6 +226,9 @@ for (i in 1:k) {
 
 (LR.mod.acc <- mean(round(glm.prediction)[,1] == glm.testset[,1]))
 ```
+```
+## [1] 0.8660131
+```
 
 <br/>
 
@@ -205,21 +238,25 @@ glm.pr2 <- prediction(glm.prediction[,1], glm.testset[,1])
 glm.perf2 <- performance(glm.pr2, measure = "tpr", x.measure = "fpr")
 glm.auc2 <- performance(glm.pr2, measure = "auc") ; (LR.mod.auc <- unlist(glm.auc2@y.values))
 ```
+```
+## [1] 0.9256386
+```
 
 <br/>
 
 **로지스틱 회귀에서 축소모형을 적합하였을 때의 AUC값이 높음을 확인할 수 있으며, ROC 곡선은 아래와 같다.**
 
-```{r echo = FALSE, results = 'axis'}
-library(knitr)
-a <- data.frame("완전모형" = c(LR.Full.acc, LR.Full.auc),"축소모형" = c(LR.mod.acc, LR.mod.auc))
-rownames(a) <- c("정확도", "AUC값")
-kable(a)
-```
+| | **완전모형**	| **축소모형** |
+| ---- | ---- | ---- |  
+| 정확도	| 0.8627451	| 0.8660131 |
+| AUC값	| 0.9244383	| 0.9256386 |
 
 ```javascript
 plot(glm.perf2)
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420891-911c3d56-47f2-4f86-8b5b-826afda3ce28.png">
+
+
 
 <br/>
 
@@ -228,7 +265,7 @@ plot(glm.perf2)
 
 <br/>
 
-**1. 완전모형 적합**
+#### **1. 완전모형 적합**
 **정확도**
 ```javascript
 lda.prediction <- data.frame()
@@ -245,7 +282,9 @@ for (i in 1:k) {
   lda.testset <- rbind(lda.testset, as.data.frame(test.set[,12]))
 }
 (LDA.Full.acc <- mean(lda.prediction$class == lda.testset[,1]))
-
+```
+```
+## [1] 0.8649237
 ```
 
 <br/>
@@ -260,7 +299,7 @@ lda.auc1 <- performance(lda.pr1, measure = "auc") ; (LDA.Full.auc <- unlist(lda.
 
 <br/>
 
-**2. 축소모형 적합**
+#### **2. 축소모형 적합**
 **정확도**
 ```javascript
 lda.prediction <- data.frame()
@@ -278,6 +317,9 @@ for (i in 1:k) {
 }
 (LDA.mod.acc <- mean(lda.prediction$class == lda.testset[,1]))
 ```
+```
+## [1] 0.8714597
+```
 
 <br/>
 
@@ -287,21 +329,24 @@ lda.pr2 <- prediction(lda.prediction$posterior.1, lda.testset[,1])
 lda.perf2 <- performance(lda.pr2, measure = "tpr", x.measure = "fpr")
 lda.auc2 <- performance(lda.pr2, measure = "auc") ; (LDA.mod.auc <- unlist(lda.auc2@y.values))
 ```
+```
+## [1] 0.9259314
+```
 
 <br/>
 
 **LDA에서 축소모형을 적합하였을 때의 AUC값이 높음을 확인할 수 있으며, ROC 곡선은 아래와 같다.**
+| | **완전모형**	| **축소모형** |
+| ---- | ---- | ---- |  
+| 정확도	| 0.8649237	| 0.8714597 |
+| AUC값	| 0.9250624	| 0.9259314 |
 
-```{r echo = FALSE, results = 'axis'}
-library(knitr)
-a <- data.frame("완전모형" = c(LDA.Full.acc, LDA.Full.auc),"축소모형" = c(LDA.mod.acc, LDA.mod.auc))
-rownames(a) <- c("정확도", "AUC값")
-kable(a)
-```
 
-```{r pressure19}
+```javascript
 plot(lda.perf2)
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420895-3b3ce2ce-ac98-4f26-812e-3e13c95ef40a.png">
+
 
 <br/>
 
@@ -310,7 +355,7 @@ plot(lda.perf2)
 
 <br/>
 
-**1. 완전모형 적합**
+#### **1. 완전모형 적합**
 **정확도**
 ```{r pressure20}
 qda.prediction <- data.frame()
@@ -329,6 +374,9 @@ for (i in 1:k) {
 
 (qda.Full.acc <- mean(qda.prediction$class == qda.testset[,1]))
 ```
+```
+## [1] 0.8453159
+```
 
 <br/>
 
@@ -338,10 +386,13 @@ qda.pr1 <- prediction(qda.prediction$posterior.1, qda.testset[,1])
 qda.perf1 <- performance(qda.pr1, measure = "tpr", x.measure = "fpr")
 qda.auc1 <- performance(qda.pr1, measure = "auc") ; (qda.Full.auc <- unlist(qda.auc1@y.values))
 ```
+```
+## [1] 0.9116094
+```
 
 <br/>
 
-**1. 축소모형 적합**
+#### **1. 축소모형 적합**
 **정확도**
 ```javascript
 qda.prediction <- data.frame()
@@ -360,6 +411,9 @@ for (i in 1:k) {
 
 (qda.mod.acc <- mean(qda.prediction$class == qda.testset[,1]))
 ```
+```
+## [1] 0.8420479
+```
 
 <br/>
 
@@ -369,21 +423,22 @@ qda.pr2 <- prediction(qda.prediction$posterior.1, qda.testset[,1])
 qda.perf2 <- performance(qda.pr2, measure = "tpr", x.measure = "fpr")
 qda.auc2 <- performance(qda.pr2, measure = "auc") ; (qda.mod.auc <- unlist(qda.auc2@y.values))
 ```
+```
+## [1] 0.9065873
+```
 
 <br/>
 
 **QDA에서 완전모형을 적합하였을 때의 AUC값이 높음을 확인할 수 있으며, ROC 곡선은 아래와 같다.**
-
-```{r echo = FALSE, results = 'axis'}
-library(knitr)
-a <- data.frame("완전모형" = c(qda.Full.acc, qda.Full.auc),"축소모형" = c(qda.mod.acc, qda.mod.auc))
-rownames(a) <- c("정확도", "AUC값")
-kable(a)
-```
+| | **완전모형**	| **축소모형** |
+| ---- | ---- | ---- |  
+| 정확도	| 0.8453159 |	0.8420479 |
+| AUC값	| 0.9116094	| 0.9065873 |
 
 ```javascript
 plot(qda.perf1)
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420899-5e6f9fb2-1297-4c96-a06e-0b52fcbd1ace.png">
 
 <br/>
 
@@ -392,7 +447,7 @@ plot(qda.perf1)
 
 <br/>
 
-**1. 완전모형 적합**
+#### **1. 완전모형 적합**
 **정확도**
 ```javascript
 nb.prediction <- data.frame()
@@ -413,6 +468,9 @@ for (i in 1:k) {
 }
 (nb.Full.acc <- mean(nb.prediction[,1] == nb.testset[,1]))
 ```
+```
+## [1] 0.8616558
+```
 
 <br/>
 
@@ -422,10 +480,13 @@ nb.pr1 <- prediction(nb.probability[,2], nb.testset[,1])
 nb.perf1 <- performance(nb.pr1, measure = "tpr", x.measure = "fpr")
 nb.auc1 <- performance(nb.pr1, measure = "auc") ; (nb.Full.auc <- unlist(nb.auc1@y.values))
 ```
+```
+## [1] 0.9205973
+```
 
 <br/>
 
-**1. 축소모형 적합**
+#### **1. 축소모형 적합**
 **정확도**
 ```javascript
 nb.prediction <- data.frame()
@@ -446,6 +507,9 @@ for (i in 1:k) {
 }
 (nb.mod.acc <- mean(nb.prediction[,1] == nb.testset[,1]))
 ```
+```
+## [1] 0.8638344
+```
 
 <br/>
 
@@ -455,33 +519,28 @@ nb.pr2 <- prediction(nb.probability[,2], nb.testset[,1])
 nb.perf2 <- performance(nb.pr2, measure = "tpr", x.measure = "fpr")
 nb.auc2 <- performance(nb.pr2, measure = "auc") ; (nb.mod.auc <- unlist(nb.auc2@y.values))
 ```
+```
+## [1] 0.9235068
+```
 
 <br/>
 
 **Naive Bayes에서 축소모형을 적합하였을 때의 AUC값이 높음을 확인할 수 있으며, ROC 곡선은 아래와 같다.**
-
-```{r echo = FALSE, results = 'axis'}
-library(knitr)
-a <- data.frame("완전모형" = c(nb.Full.acc, nb.Full.auc),"축소모형" = c(nb.mod.acc, nb.mod.auc))
-rownames(a) <- c("정확도", "AUC값")
-kable(a)
-```
+| | **완전모형**	| **축소모형** |
+| ---- | ---- | ---- |  
+| 정확도	| 0.8616558	| 0.8638344 |
+| AUC값	| 0.9205973	| 0.9235068 |
 
 ```javascript
 plot(nb.perf2)
 ```
+<img width="840" height="600" src="">
+
 
 <br/>
 
 #### 분류 방법별 비교
-
-```javascript
-AUC.1 <- c(LR.mod.auc, LDA.mod.auc, qda.Full.auc, nb.mod.auc)
-name.1 <- c("로지스틱", "LDA", "QDA", "NB")
-col<-c(0,21,0,0)
-bp <- barplot(AUC.1, names.arg = name.1, col = col, ylim = c(0,1), ylab = "AUC")
-text(x=bp, y=AUC.1, labels = round(AUC.1,5), cex = 1.2)
-```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420902-3b7c66ef-3ba7-4ef2-9bed-ec67bca4c634.png">
 
 - 위 방법들 별로 가장 높은 AUC값들을 가지는 모형들의 ROC 곡선과 AUC값들은 위의 그림들과 같다. 따라서, 로지스틱, LDA, QDA, Naive Bayes방법들 중 AUC값을 기준으로 제일 좋은 분류기는 LDA라고 할 수 있으나, 로지스틱 회귀와 큰 차이를 보이지 않는다.
 
@@ -491,23 +550,34 @@ text(x=bp, y=AUC.1, labels = round(AUC.1,5), cex = 1.2)
 
 <br/>
 
-####Classification tree & Pruning
+#### Classification tree & Pruning
 ```javascript
 tree.train.f <- tree(formula(Fullmod), data = heart, subset = train)
 plot(tree.train.f) ; text(tree.train.f, pretty = 1, cex = 0.8)
-
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420909-086c9d03-29df-4137-8729-00f242e48fcb.png">
+
+<br/>
+
 **정확도**
 ```javascript
 tree.pred.f <- predict(tree.train.f, newdata = test.d)
 (ctree.acc <- mean(round(tree.pred.f[,2]) == test.d$HeartDisease))
 ```
+```
+## [1] 0.8581818
+```
+
+<br/>
 
 **AUC값**
 ```javascript
 tree.pr <- prediction(tree.pred.f[,2], test.d$HeartDisease)
 tree.perf <- performance(tree.pr, measure = "tpr", x.measure = "fpr")
 tree.auc <- performance(tree.pr, measure = "auc") ; (ctree.auc <- unlist(tree.auc@y.values))
+```
+```
+## [1] 0.8972507
 ```
 
 <br/>
@@ -517,8 +587,32 @@ tree.auc <- performance(tree.pr, measure = "auc") ; (ctree.auc <- unlist(tree.au
 set.seed(6)
 cv.tree.f <- cv.tree(tree.train.f, FUN = prune.misclass)
 plot(cv.tree.f$size, cv.tree.f$dev, type = "b")
+```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420910-c3b5c5f3-b825-4ab0-aa7d-1c7c9288aba0.png">
+
+```javascript
 plot(cv.tree.f$k, cv.tree.f$dev, type = "b")
+```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420914-a7915a1f-1b99-4a8c-ba62-011e35c7b25a.png">
+
+```javascript
 cv.tree.f
+```
+```
+## $size
+## [1] 12  9  8  4  2  1
+## 
+## $dev
+## [1] 123 123 117 111 118 287
+## 
+## $k
+## [1]  -Inf   0.0   4.0   4.5   8.0 169.0
+## 
+## $method
+## [1] "misclass"
+## 
+## attr(,"class")
+## [1] "prune"         "tree.sequence"
 ```
 **- 최소의 dev값을 가지는 penalty = 2.333, 가지수 = 5**
 
@@ -530,10 +624,16 @@ cv.tree.f
 prune.f <- prune.misclass(tree.train.f, best=5)
 plot(prune.f) ; text(prune.f, pretty=0, cex=0.8)
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420917-3b0a10a8-7ac7-47be-a572-207146fe1777.png">
+
+
 **정확도**
 ```javascript
 prune.pred <- predict(prune.f, test.d)
 (pruned.acc <- mean(round(prune.pred[,2]) == test.d$HeartDisease))
+```
+```
+## [1] 0.8363636
 ```
 
 <br/>
@@ -543,6 +643,9 @@ prune.pred <- predict(prune.f, test.d)
 prune.pr <- prediction(prune.pred[,2], test.d$HeartDisease)
 prune.perf <- performance(prune.pr, measure = "tpr", x.measure = "fpr")
 prune.auc <- performance(prune.pr, measure = "auc") ; (pruned.auc <- unlist(prune.auc@y.values))
+```
+```
+## [1] 0.8725931
 ```
 
 <br/>
@@ -585,10 +688,12 @@ for (j in 1:length(ntrees)) {
 ```javascript
 plot(auc ~ ntrees, type = "b")
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420918-5351bb6a-4053-4d2a-9175-47383f0cdc4e.png">
+
 
 <br/>
 
-**- 10-folds CV를 통해 탐색한 하이퍼 파라미터에 맞게 Bagging 모형을 생성하고 훈련데이터를 적합** 
+#### **- 10-folds CV를 통해 탐색한 하이퍼 파라미터에 맞게 Bagging 모형을 생성하고 훈련데이터를 적합** 
 **정확도**
 ```javascript
 set.seed(1)
@@ -596,6 +701,9 @@ bag.heart1 <- randomForest(formula(Fullmod), data=heart, subset = train,
                            mtry=11, importance=T, ntree=200)
 bag.pred <- predict(bag.heart1, newdata = test.d)
 (bag.acc <- mean(bag.pred == test.d$HeartDisease))
+```
+```
+## [1] 0.8654545
 ```
 
 <br/>
@@ -607,10 +715,15 @@ bag.pr <- prediction(bag.prob[,2], test.d$HeartDisease)
 bag.perf <- performance(bag.pr, measure = "tpr", x.measure = "fpr")
 bag.auc <- performance(bag.pr, measure = "auc") ; (bag.auc <- unlist(bag.auc@y.values))
 ```
+```
+## [1] 0.9252246
+```
 
-```{r pressure41, echo = F}
+```javascript
 plot(bag.perf)
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420919-0a19abe7-5380-4ac2-8968-157b3e34375e.png">
+
 
 <br/>
 
@@ -649,10 +762,11 @@ for (j in 1:length(ntrees)) {
 ```javascript
 plot(auc3 ~ ntrees, type = "b")
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420922-6655b48e-cd6e-473c-9c08-3113e9c6b2ef.png">
 
 <br/>
 
-**- 10-folds CV를 통해 탐색한 하이퍼 파라미터에 맞게 RandomForest 모형을 생성하고 훈련데이터를 적합** 
+#### **- 10-folds CV를 통해 탐색한 하이퍼 파라미터에 맞게 RandomForest 모형을 생성하고 훈련데이터를 적합** 
 **정확도**
 ```javascript
 set.seed(1)
@@ -660,6 +774,9 @@ rf.heart <- randomForest(formula(Fullmod), data= heart, subset = train,
                          mtry=3, importance=T, ntree=1500)
 rf.pred <- predict(rf.heart, newdata = test.d)
 (rf.acc <- mean(rf.pred == test.d$HeartDisease))
+```
+```
+## [1] 0.8654545
 ```
 
 <br/>
@@ -671,25 +788,25 @@ rf.pr <- prediction(rf.prob[,2], test.d$HeartDisease)
 rf.perf <- performance(rf.pr, measure = "tpr", x.measure = "fpr")
 rf.auc <- performance(rf.pr, measure = "auc") ; (rf.auc <- unlist(rf.auc@y.values))
 ```
+```
+## [1] 0.9388104
+```
 
-```{r pressure46, echo = F}
+```javascript
 plot(rf.perf)
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420925-1fc0eb4d-8507-47d5-897b-cbce7244453d.png">
 
-```{r echo = FALSE, results = 'axis'}
-a <- cbind("Tree" = c(ctree.acc, ctree.auc),"Pruned Tree" = c(pruned.acc, pruned.auc),
-                "Bagging" = c(bag.acc, bag.auc), "RandomForest" = c(rf.acc, rf.auc))
-rownames(a) <- c("정확도", "AUC값")
-kable(a)
-```
 
-```{r echo = FALSE, results = 'axis'}
-AUC.1 <- c(ctree.auc, pruned.auc, bag.auc, rf.auc)
-name.1 <- c("Tree", "Pruned Tree", "Bagging", "RandomForest")
-col <- c(0,0,0,21)
-bp <- barplot(AUC.1, names.arg = name.1, col=col, ylim = c(0,1), ylab = "AUC")
-text(x=bp, y=AUC.1, labels = round(AUC.1,5), cex = 1.2)
-```
+|  | **Tree**	| **Pruned Tree**  |	**Bagging**	| **RandomForest** |
+| ---- | ---- | ---- | ---- | ---- |
+| 정확도	| 0.8581818	 | 0.8363636	| 0.8654545	| 0.8654545 |
+| AUC값	| 0.8972507	| 0.8725931	| 0.9252246	| 0.9388104 |
+
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420927-2ec52344-07a5-46de-91dc-aebe6942066f.png">
+
+
+
 
 - 위 방법들 별로 가장 높은 AUC값들을 가지는 모형들의 ROC 곡선과 AUC값들은 위의 그림들과 같다. 따라서, Tree기반의 method들 중 AUC값을 기준으로 제일 좋은 분류기는 RandomForest라고 할 수 있다.
 

@@ -294,7 +294,9 @@ for (i in 1:k) {
 lda.pr1 <- prediction(lda.prediction$posterior.1, lda.testset[,1])
 lda.perf1 <- performance(lda.pr1, measure = "tpr", x.measure = "fpr")
 lda.auc1 <- performance(lda.pr1, measure = "auc") ; (LDA.Full.auc <- unlist(lda.auc1@y.values))
-
+```
+```
+0.9250624
 ```
 
 <br/>
@@ -534,7 +536,7 @@ nb.auc2 <- performance(nb.pr2, measure = "auc") ; (nb.mod.auc <- unlist(nb.auc2@
 ```javascript
 plot(nb.perf2)
 ```
-<img width="840" height="600" src="">
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158428213-f9f5764d-18bc-4f55-9e59-3b2d6d4a365f.png">
 
 
 <br/>
@@ -684,7 +686,7 @@ for (j in 1:length(ntrees)) {
 
 <br/>
 
-**-ntree (생성 나무 수)를 200으로 설정할 때, 가장 높은 성능을 가짐을 알 수 있다.**
+**- ntree (생성 나무 수)를 200으로 설정할 때, 가장 높은 성능을 가짐을 알 수 있다.**
 ```javascript
 plot(auc ~ ntrees, type = "b")
 ```
@@ -728,7 +730,7 @@ plot(bag.perf)
 <br/>
 
 #### 10-folds CV를 활용한 최적의 RandomForest 모형 탐색 
-**- m \approx \sqrt(p) 를 통해 사용 변수 설정 **
+**m = sqrt(p) 를 통해 사용 변수 설정 **
 
 ```javascript
 set.seed(1)
@@ -826,7 +828,27 @@ tune.out <- tune(svm, formula(Fullmod),
                   ranges = list(cost = costs,
                                 gamma = gammas))
 (bestmod <- tune.out$best.model) 
+```
+```
+## 
+## Call:
+## best.tune(method = svm, train.x = formula(Fullmod), data = train.d, 
+##     ranges = list(cost = costs, gamma = gammas), kernel = "radial")
+## 
+## 
+## Parameters:
+##    SVM-Type:  C-classification 
+##  SVM-Kernel:  radial 
+##        cost:  1 
+## 
+## Number of Support Vectors:  461
+```
+```javascript
 bestmod$cost ; bestmod$gamma
+```
+```
+## [1] 1
+## [1] 0.5
 ```
 
 - margin의 크기와 관련 있는 cost , fitting 정도와 관련 있는 gamma 의 값을 적절히 선정해야 한다. 이를 위해 10-fold Cross Validation을 이용한다. tuning 결과 cost=1, gamma=0.5의 값이 최적의 하이퍼 파라미터임을 알 수 있다.
@@ -842,6 +864,9 @@ svm.fit <- svm(formula(Fullmod), data = train.d,
 svm.pred <- predict(svm.fit, newdata = test.d, decision.values = T)
 (svm.acc <- mean(svm.pred == test.d$HeartDisease))
 ```
+```
+## [1] 0.8690909
+```
 
 <br/>
 
@@ -853,9 +878,11 @@ svm.perf <- performance(svm.pr, measure = "tpr", x.measure = "fpr")
 svm.auc <- performance(svm.pr, measure = "auc") ; svm.auc <- unlist(svm.auc@y.values)
 ```
 
-```{r pressure50, echo = F}
+```javascript
 plot(svm.perf)
 ```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420930-cddfc95f-247b-41ba-93b4-421b470d363a.png">
+
 
 <br/>
 
@@ -869,19 +896,10 @@ plot(svm.perf)
 <br/>
 
 **모형별 정확도**
-```{r echo = FALSE, results = 'axis'}
-ACC.1 <- c(LR.mod.acc, LDA.mod.acc, qda.Full.acc, nb.mod.acc, ctree.acc, pruned.acc, bag.acc, rf.acc, svm.acc)
-name.1 <- c("로지스틱", "LDA", "QDA", "NB", "Tree", "Pruned", "Bag", "RF", "SVM")
-bp <- barplot(ACC.1, names.arg = name.1, col=c(0,21,rep(0,7)), ylim = c(0,1), ylab = "정확도")
-text(x=bp, y=ACC.1, labels = round(ACC.1,5), cex = 0.8)
-```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420932-3a7dbebf-3c29-4ef0-bdb0-2abab88bee36.png">
 
 <br/>
 
 **모형별 AUC값**
-```{r echo = FALSE, results = 'axis'}
-AUC.1 <- c(LR.mod.auc, LDA.mod.auc, qda.Full.auc, nb.mod.auc, ctree.auc, pruned.auc, bag.auc, rf.auc, svm.auc)
-name.1 <- c("로지스틱", "LDA", "QDA", "NB", "Tree", "Pruned", "Bag", "RF", "SVM")
-bp <- barplot(AUC.1, names.arg = name.1, col=c(0,21,rep(0,7)), ylim = c(0,1), ylab = "정확도")
-text(x=bp, y=AUC.1, labels = round(ACC.1,5), cex = 0.8)
-```
+<img width="840" height="600" src="https://user-images.githubusercontent.com/100699925/158420934-32c97c9e-310e-423f-b310-997dc4cf5e4e.png">
+

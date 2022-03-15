@@ -78,10 +78,7 @@ library(randomForest)
 
 4. 변수별 상관관계 시각화
 
-<br/>
-<br/>
 ```javascript
-setwd("C:/Users/이찬솔") 
 heart <- read.csv("heart.csv", header = T)
 plot(heart, panel = panel.smooth)
 ```
